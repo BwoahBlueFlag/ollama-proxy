@@ -57,14 +57,9 @@ func main() {
 	}
 
 	runnerPort = strconv.Itoa(port)
+	portMapping := runnerPort + ":57156"
 
-	if portIndex > 0 {
-		args[portIndex] = runnerPort
-	} else {
-		args = append(args, "--port", runnerPort)
-	}
-
-	cmd := exec.Command("./ollama-real", args[1:]...)
+	cmd := exec.Command("docker", "run", "-p", portMapping, "ollama-runner")
 	cmd.Stdout = file
 	cmd.Stderr = file
 	err = cmd.Start()
