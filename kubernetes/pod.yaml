@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ollama-runner
+  labels:
+    app: ollama-runner
+spec:
+  containers:
+    - name: ollama-runner
+      image: xjanci14/ollama-runner
+      ports:
+        - containerPort: 57156

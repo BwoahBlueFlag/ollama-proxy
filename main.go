@@ -2,17 +2,13 @@ package main
 
 import (
 	"io"
-	"math/rand"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
-
-var runnerPort string
 
 func main() {
 	currentTime := time.Now()
@@ -38,32 +34,29 @@ func main() {
 		proxyPort = args[portIndex]
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+
 	addr := "127.0.0.1:" + proxyPort
 	go func() {
+		defer wg.Done()
 		http.HandleFunc("/", handle)
 		err = http.ListenAndServe(addr, nil)
 	}()
 
-	port := 0
-	if a, err := net.ResolveTCPAddr("tcp", "localhost:0"); err == nil {
-		var l *net.TCPListener
-		if l, err = net.ListenTCP("tcp", a); err == nil {
-			port = l.Addr().(*net.TCPAddr).Port
-			err = l.Close()
-		}
-	}
-	if port == 0 {
-		port = rand.Intn(65535-49152) + 49152 // get a random port in the ephemeral range
-	}
-
-	runnerPort = strconv.Itoa(port)
-	portMapping := runnerPort + ":57156"
-
-	cmd := exec.Command("docker", "run", "-p", portMapping, "ollama-runner")
+	cmd := exec.Command("kubectl", "apply", "-f", "kubernetes/pod.yaml")
 	cmd.Stdout = file
 	cmd.Stderr = file
 	err = cmd.Start()
 	err = cmd.Wait()
+
+	cmd = exec.Command("kubectl", "apply", "-f", "kubernetes/service.yaml")
+	cmd.Stdout = file
+	cmd.Stderr = file
+	err = cmd.Start()
+	err = cmd.Wait()
+
+	wg.Wait()
 }
 
 func getPortIndex(args []string) int {
@@ -87,7 +80,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	targetURL := "http://localhost:" + runnerPort + r.URL.Path
+	targetURL := "http://localhost:57156" + r.URL.Path
 
 	newReq, err := http.NewRequest(r.Method, targetURL, r.Body)
 	if err != nil {
