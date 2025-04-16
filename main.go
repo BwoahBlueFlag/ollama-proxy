@@ -56,6 +56,11 @@ func main() {
 	err = cmd.Start()
 	err = cmd.Wait()
 
+	cmd = exec.Command("./ollama-proxy-watchdog")
+	cmd.Stdout = file
+	cmd.Stderr = file
+	err = cmd.Start()
+
 	wg.Wait()
 }
 
