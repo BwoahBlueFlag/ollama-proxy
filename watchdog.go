@@ -13,7 +13,7 @@ func main() {
 	for {
 		err := syscall.Kill(ppid, 0)
 		if err != nil {
-			cmd := exec.Command("kubectl", "delete", "pod", "ollama-runner")
+			cmd := exec.Command("kubectl", "delete", "job", "ollama-runner")
 			err = cmd.Start()
 			err = cmd.Wait()
 			os.Exit(1)
