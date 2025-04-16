@@ -29,3 +29,5 @@ go.work.sum
 ollama-real
 ollama-proxy
 ollama
+ollama-proxy-watchdog
+docker/model

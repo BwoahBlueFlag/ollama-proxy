@@ -44,7 +44,7 @@ func main() {
 		err = http.ListenAndServe(addr, nil)
 	}()
 
-	cmd := exec.Command("kubectl", "apply", "-f", "kubernetes/pod.yaml")
+	cmd := exec.Command("kubectl", "apply", "-f", "kubernetes/job.yaml")
 	cmd.Stdout = file
 	cmd.Stderr = file
 	err = cmd.Start()
