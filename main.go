@@ -1,13 +1,23 @@
 package main
 
 import (
+	"context"
 	"io"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 func main() {
@@ -44,19 +54,77 @@ func main() {
 		err = http.ListenAndServe(addr, nil)
 	}()
 
-	cmd := exec.Command("kubectl", "apply", "-f", "kubernetes/job.yaml")
-	cmd.Stdout = file
-	cmd.Stderr = file
-	err = cmd.Start()
-	err = cmd.Wait()
+	kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
 
-	cmd = exec.Command("kubectl", "apply", "-f", "kubernetes/service.yaml")
-	cmd.Stdout = file
-	cmd.Stderr = file
-	err = cmd.Start()
-	err = cmd.Wait()
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		panic(err)
+	}
 
-	cmd = exec.Command("./ollama-proxy-watchdog")
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err)
+	}
+
+	job := &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "ollama-runner",
+		},
+		Spec: batchv1.JobSpec{
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": "ollama-runner",
+					},
+				},
+				Spec: corev1.PodSpec{
+					RestartPolicy: corev1.RestartPolicyNever,
+					Containers: []corev1.Container{
+						{
+							Name:  "ollama-runner",
+							Image: "xjanci14/ollama-runner",
+							Ports: []corev1.ContainerPort{
+								{
+									ContainerPort: 57156,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	_, err = clientset.BatchV1().Jobs("default").Create(context.TODO(), job, metav1.CreateOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "ollama-runner",
+		},
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeLoadBalancer,
+			Selector: map[string]string{
+				"app": "ollama-runner",
+			},
+			Ports: []corev1.ServicePort{
+				{
+					Protocol:   corev1.ProtocolTCP,
+					Port:       57156,
+					TargetPort: intstr.FromInt32(57156),
+				},
+			},
+		},
+	}
+
+	_, err = clientset.CoreV1().Services("default").Create(context.TODO(), service, metav1.CreateOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	cmd := exec.Command("./ollama-proxy-watchdog")
 	cmd.Stdout = file
 	cmd.Stderr = file
 	err = cmd.Start()
