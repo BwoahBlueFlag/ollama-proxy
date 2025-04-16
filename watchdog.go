@@ -1,10 +1,16 @@
 package main
 
 import (
+	"context"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"syscall"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 func main() {
@@ -13,13 +19,20 @@ func main() {
 	for {
 		err := syscall.Kill(ppid, 0)
 		if err != nil {
-			cmd := exec.Command("kubectl", "delete", "job", "ollama-runner")
-			err = cmd.Start()
-			err = cmd.Wait()
+			kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
 
-			cmd = exec.Command("kubectl", "delete", "service", "ollama-runner")
-			err = cmd.Start()
-			err = cmd.Wait()
+			config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+			if err != nil {
+				panic(err)
+			}
+
+			clientset, err := kubernetes.NewForConfig(config)
+			if err != nil {
+				panic(err)
+			}
+
+			err = clientset.BatchV1().Jobs("default").Delete(context.TODO(), "ollama-runner", metav1.DeleteOptions{})
+			err = clientset.CoreV1().Services("default").Delete(context.TODO(), "ollama-runner", metav1.DeleteOptions{})
 
 			os.Exit(1)
 		}
