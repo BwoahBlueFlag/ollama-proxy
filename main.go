@@ -77,9 +77,10 @@ func main() {
 					RestartPolicy: corev1.RestartPolicyNever,
 					Containers: []corev1.Container{
 						{
-							Name:    "ollama-runner",
-							Image:   "xjanci14/ollama-runner",
-							Command: []string{"/ollama-proxy/run-runner.sh"},
+							Name:       "ollama-runner",
+							Image:      "xjanci14/ollama-runner",
+							WorkingDir: "/ollama-proxy",
+							Command:    []string{"./run-runner.sh"},
 							Ports: []corev1.ContainerPort{
 								{
 									ContainerPort: 57156,
