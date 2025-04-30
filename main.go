@@ -102,7 +102,7 @@ func main() {
 			Name: "ollama-runner",
 		},
 		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeLoadBalancer,
+			Type: corev1.ServiceTypeNodePort,
 			Selector: map[string]string{
 				"app": "ollama-runner",
 			},
