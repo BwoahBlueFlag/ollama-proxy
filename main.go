@@ -78,8 +78,8 @@ func main() {
 					Containers: []corev1.Container{
 						{
 							Name:    "ollama-runner",
-							Image:   "xjanci14/ollama-runner",
-							Command: []string{"/ollama-runner/run-runner.sh"},
+							Image:   "xjanci14/ollama-proxy",
+							Command: []string{"./run-runner.sh"},
 							Ports: []corev1.ContainerPort{
 								{
 									ContainerPort: 57156,
