@@ -102,7 +102,6 @@ func main() {
 			Name: "ollama-runner",
 		},
 		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeNodePort,
 			Selector: map[string]string{
 				"app": "ollama-runner",
 			},
@@ -150,7 +149,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	targetURL := "http://localhost:57156" + r.URL.Path
+	targetURL := "http://ollama-runner:57156" + r.URL.Path
 
 	newReq, err := http.NewRequest(r.Method, targetURL, r.Body)
 	if err != nil {
