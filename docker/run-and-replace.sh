@@ -8,3 +8,5 @@ cp ollama-real ollama
 # the binary has to be deleted first otherwise the original process is killed
 rm ollama
 cp ollama-proxy ollama
+
+tail -f /dev/null

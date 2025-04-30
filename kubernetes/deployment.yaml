@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama-server
+  template:
+    metadata:
+      labels:
+        app: ollama-server
+    spec:
+      containers:
+        - name: ollama-server
+          image: xjanci14/ollama-proxy
+          ports:
+            - containerPort: 11434

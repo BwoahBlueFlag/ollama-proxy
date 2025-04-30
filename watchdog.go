@@ -2,15 +2,13 @@ package main
 
 import (
 	"context"
+	"k8s.io/client-go/rest"
 	"os"
-	"path/filepath"
 	"syscall"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 )
 
 func main() {
@@ -19,16 +17,14 @@ func main() {
 	for {
 		err := syscall.Kill(ppid, 0)
 		if err != nil {
-			kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
-
-			config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+			config, err := rest.InClusterConfig()
 			if err != nil {
-				panic(err)
+				panic(err.Error())
 			}
 
 			clientset, err := kubernetes.NewForConfig(config)
 			if err != nil {
-				panic(err)
+				panic(err.Error())
 			}
 
 			err = clientset.BatchV1().Jobs("default").Delete(context.TODO(), "ollama-runner", metav1.DeleteOptions{})

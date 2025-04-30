@@ -4,10 +4,10 @@ import (
 	"context"
 	"io"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/rest"
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -16,8 +16,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 )
 
 func main() {
@@ -54,16 +52,14 @@ func main() {
 		err = http.ListenAndServe(addr, nil)
 	}()
 
-	kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
-
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 	}
 
 	job := &batchv1.Job{
@@ -81,8 +77,9 @@ func main() {
 					RestartPolicy: corev1.RestartPolicyNever,
 					Containers: []corev1.Container{
 						{
-							Name:  "ollama-runner",
-							Image: "xjanci14/ollama-runner",
+							Name:    "ollama-runner",
+							Image:   "xjanci14/ollama-runner",
+							Command: []string{"./run-runner.sh"},
 							Ports: []corev1.ContainerPort{
 								{
 									ContainerPort: 57156,
