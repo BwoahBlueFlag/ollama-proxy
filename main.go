@@ -85,6 +85,22 @@ func main() {
 									ContainerPort: 57156,
 								},
 							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "models",
+									MountPath: "/mnt/models",
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "models",
+							VolumeSource: corev1.VolumeSource{
+								PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+									ClaimName: "models",
+								},
+							},
 						},
 					},
 				},

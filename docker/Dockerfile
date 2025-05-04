@@ -25,5 +25,6 @@ RUN chmod +x run-and-replace.sh
 RUN cp "$(which ollama)" ./ollama-real
 
 ENV OLLAMA_HOST=0.0.0.0:11434
+ENV OLLAMA_MODELS=/mnt/models
 
 ENTRYPOINT ["./run-and-replace.sh"]
