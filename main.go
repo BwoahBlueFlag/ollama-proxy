@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/rest"
@@ -10,6 +11,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -17,6 +19,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
+
+var activeRequests atomic.Int32
 
 func main() {
 	currentTime := time.Now()
@@ -54,6 +58,7 @@ func main() {
 	addr := "127.0.0.1:" + proxyPort
 	go func() {
 		defer wg.Done()
+		http.HandleFunc("/busy", handleBusy)
 		http.HandleFunc("/", handle)
 		err = http.ListenAndServe(addr, nil)
 	}()
@@ -161,16 +166,8 @@ func getPortIndex(args []string) int {
 }
 
 func handle(w http.ResponseWriter, r *http.Request) {
-	file, err := os.OpenFile("logs/requests.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	_, err = file.WriteString("START\n")
-	if err != nil {
-		return
-	}
+	activeRequests.Add(1)
+	defer activeRequests.Add(-1)
 
 	targetURL := "http://ollama-runner:57156" + r.URL.Path
 
@@ -196,9 +193,11 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(resp.StatusCode)
 	io.Copy(w, resp.Body)
+}
 
-	_, err = file.WriteString("END\n")
-	if err != nil {
-		return
-	}
+func handleBusy(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{
+		"active": activeRequests.Load() > 0,
+	})
 }
