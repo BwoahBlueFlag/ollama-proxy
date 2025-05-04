@@ -199,6 +199,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 func handleBusy(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]bool{
-		"active": activeRequests.Load() > 0,
+		"busy": activeRequests.Load() > 0,
 	})
 }
