@@ -7,8 +7,6 @@ RUN go build -o ollama-proxy-watchdog watchdog.go
 
 FROM ollama/ollama:0.6.1
 
-COPY model /models/model
-
 RUN apt-get update && apt-get install -y socat
 
 WORKDIR /ollama-proxy
