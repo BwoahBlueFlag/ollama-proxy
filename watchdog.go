@@ -27,7 +27,10 @@ func main() {
 				panic(err.Error())
 			}
 
-			err = clientset.BatchV1().Jobs("default").Delete(context.TODO(), "ollama-runner", metav1.DeleteOptions{})
+			deletePropagation := metav1.DeletePropagationBackground
+
+			err = clientset.BatchV1().Jobs("default").Delete(context.TODO(), "ollama-runner", metav1.DeleteOptions{
+				PropagationPolicy: &deletePropagation})
 			err = clientset.CoreV1().Services("default").Delete(context.TODO(), "ollama-runner", metav1.DeleteOptions{})
 
 			os.Exit(1)
