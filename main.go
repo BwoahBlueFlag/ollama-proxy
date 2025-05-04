@@ -58,9 +58,10 @@ func main() {
 	addr := "127.0.0.1:" + proxyPort
 	go func() {
 		defer wg.Done()
-		http.HandleFunc("/busy", handleBusy)
-		http.HandleFunc("/", handle)
-		err = http.ListenAndServe(addr, nil)
+		mux := http.NewServeMux()
+		mux.HandleFunc("/busy", handleBusy)
+		mux.HandleFunc("/", handle)
+		err = http.ListenAndServe(addr, mux)
 	}()
 
 	config, err := rest.InClusterConfig()
