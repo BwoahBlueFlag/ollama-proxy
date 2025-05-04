@@ -42,6 +42,12 @@ func main() {
 		proxyPort = args[portIndex]
 	}
 
+	if portIndex > 0 {
+		args[portIndex] = "57156"
+	} else {
+		args = append(args, "--port", "57156")
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 
@@ -80,6 +86,7 @@ func main() {
 							Name:    "ollama-runner",
 							Image:   "xjanci14/ollama-proxy",
 							Command: []string{"./run-runner.sh"},
+							Args:    args[1:],
 							Ports: []corev1.ContainerPort{
 								{
 									ContainerPort: 57156,

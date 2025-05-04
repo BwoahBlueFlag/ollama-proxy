@@ -18,9 +18,9 @@ spec:
           ports:
             - containerPort: 11434
           volumeMounts:
-            - name: nfs-volume
-              mountPath: /mnt/nfs
+            - name: models
+              mountPath: /mnt/models
       volumes:
-        - name: nfs-volume
+        - name: models
           persistentVolumeClaim:
-            claimName: nfs-pvc
+            claimName: models
