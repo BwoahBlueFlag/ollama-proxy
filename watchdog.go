@@ -1,18 +1,17 @@
 package main
 
 import (
-	"context"
 	"k8s.io/client-go/rest"
 	"os"
 	"syscall"
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 func main() {
 	ppid := os.Getppid()
+	name := os.Args[1]
 
 	for {
 		err := syscall.Kill(ppid, 0)
@@ -27,11 +26,7 @@ func main() {
 				panic(err.Error())
 			}
 
-			deletePropagation := metav1.DeletePropagationBackground
-
-			err = clientset.BatchV1().Jobs("default").Delete(context.TODO(), "ollama-runner", metav1.DeleteOptions{
-				PropagationPolicy: &deletePropagation})
-			err = clientset.CoreV1().Services("default").Delete(context.TODO(), "ollama-runner", metav1.DeleteOptions{})
+			deleteRunner(clientset, name)
 
 			os.Exit(1)
 		}

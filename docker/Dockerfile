@@ -2,8 +2,8 @@ FROM golang AS builder
 WORKDIR /ollama-proxy
 ENV CGO_ENABLED=0
 RUN git clone https://github.com/BwoahBlueFlag/ollama-proxy.git .
-RUN go build -o ollama-proxy main.go
-RUN go build -o ollama-proxy-watchdog watchdog.go
+RUN go build -o ollama-proxy main.go deleteRunner.go
+RUN go build -o ollama-proxy-watchdog watchdog.go deleteRunner.go
 
 FROM ollama/ollama:0.6.1
 
